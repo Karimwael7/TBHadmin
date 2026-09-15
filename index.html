@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin: The Barber House</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23171310'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' font-weight='700' fill='%23c9a24b' text-anchor='middle'%3EBH%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#151009; --ink-2:#1e1811; --card:#241d15; --line:rgba(243,238,228,0.10);
+    --cream:#f3eee4; --cream-dim:#c9c0af; --muted:#8f8574;
+    --gold:#c9a24b; --gold-bright:#e2bd6d; --danger:#c96b6b; --good:#7bbf8a;
+    --radius:3px; --font-head:'Zilla Slab',serif; --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--cream);font-family:var(--font-body);}
+  a{color:inherit}
+  button{font-family:inherit}
+  input,select,textarea{font-family:inherit}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+
+  /* ---------- login ---------- */
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(ellipse 800px 500px at 50% 0%, rgba(201,162,75,.1), transparent 60%), var(--ink);}
+  .login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:40px;max-width:380px;width:100%}
+  .login-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:28px}
+  .brand-mark{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:700;color:var(--gold)}
+  .login-brand span.name{font-family:var(--font-head);font-weight:600;font-size:19px}
+  .login-card h1{font-size:15px;text-align:center;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin:0 0 26px}
+  .field{margin-bottom:18px;display:flex;flex-direction:column;gap:7px}
+  label{font-size:13px;font-weight:600;color:var(--cream-dim)}
+  input{background:var(--ink-2);border:1px solid var(--line);color:var(--cream);padding:12px 14px;border-radius:var(--radius);font-size:15px}
+  input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+  .btn{background:var(--gold);color:var(--ink);border:none;padding:13px;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;width:100%}
+  .btn:hover{background:var(--gold-bright)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .btn-delete{background:var(--danger)}
+  .btn-delete:hover{background:#e08787}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--cream);padding:10px 16px;border-radius:var(--radius);cursor:pointer;font-size:13.5px;font-weight:600}
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold-bright)}
+  .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:8px 12px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:600}
+  .btn-danger:hover{background:var(--danger);color:var(--ink)}
+  .login-error{background:rgba(139,46,46,.18);color:#f0a6a6;border:1px solid rgba(139,46,46,.4);padding:10px 12px;border-radius:var(--radius);font-size:13.5px;margin-bottom:16px;display:none}
+
+  /* ---------- app shell ---------- */
+  #appShell{display:none;min-height:100vh}
+  #appShell.visible{display:flex}
+  .sidebar{width:230px;flex-shrink:0;background:var(--ink-2);border-inline-end:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;border-bottom:1px solid var(--line);margin-bottom:20px;cursor:pointer}
+  .sidebar-brand span.name{font-family:var(--font-head);font-weight:600;font-size:16px}
+  .navitem{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:var(--radius);color:var(--cream-dim);text-decoration:none;font-size:14.5px;font-weight:500;cursor:pointer;margin-bottom:4px;border:none;background:none;width:100%;text-align:left}
+  .navitem .icon{font-size:17px;width:18px;height:18px}
+  .icon{width:1em;height:1em;display:inline-block;vertical-align:-0.15em}
+  .icon svg{width:100%;height:100%}
+  .navitem:hover{background:rgba(255,255,255,.04);color:var(--cream)}
+  .navitem.active{background:rgba(201,162,75,.14);color:var(--gold-bright)}
+  .sidebar-bottom{margin-top:auto;padding-top:16px;border-top:1px solid var(--line)}
+  .content{flex:1;padding:28px 32px;max-width:100%;overflow-x:hidden}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+  .topbar h2{font-family:var(--font-head);font-size:24px;margin:0;font-weight:600}
+  .mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:var(--ink-2);border-bottom:1px solid var(--line);padding:14px 18px;align-items:center;justify-content:space-between}
+  .hamburger{background:none;border:none;color:var(--cream);font-size:22px;cursor:pointer}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39}
+  .sidebar-overlay.open{display:block}
+
+  .panel{display:none}
+  .panel.active{display:block}
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+  .toolbar select, .toolbar input{background:var(--card);border:1px solid var(--line);color:var(--cream);padding:9px 12px;border-radius:var(--radius);font-size:13.5px}
+  .spacer{flex:1}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  thead th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:13px 14px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.new-row{animation:flash 2.2s ease}
+  @keyframes flash{0%{background:rgba(201,162,75,.28)}100%{background:transparent}}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .badge.confirmed{background:rgba(80,150,90,.18);color:#8fd39c}
+  .badge.completed{background:rgba(120,120,180,.18);color:#a9b6ea}
+  .badge.cancelled{background:rgba(139,46,46,.18);color:#e08787}
+  .badge.no-show{background:rgba(180,140,60,.18);color:#e0c187}
+  .row-actions{display:flex;gap:8px}
+  .icon-btn{background:none;border:1px solid var(--line);color:var(--cream-dim);width:30px;height:30px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .icon-btn:hover{border-color:var(--gold);color:var(--gold-bright)}
+  .icon-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+  .icon-btn.complete:hover{border-color:var(--good);color:var(--good)}
+  .empty-row td{text-align:center;color:var(--muted);padding:40px}
+
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+  .item-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .item-card h4{margin:0 0 4px;font-family:var(--font-head);font-size:16.5px}
+  .item-card .sub{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+  .item-card .desc{font-size:13.5px;color:var(--cream-dim);margin-bottom:12px;min-height:36px}
+  .item-card .row{display:flex;justify-content:space-between;align-items:center}
+  .toggle-pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
+  .toggle-pill.active{background:rgba(80,150,90,.18);color:#8fd39c}
+  .toggle-pill.inactive{background:rgba(139,46,46,.18);color:#e08787}
+
+  /* modal / drawer for add-edit forms */
+  .drawer-overlay{position:fixed;inset:0;background:rgba(10,8,5,.7);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:5vh 16px;overflow-y:auto}
+  .drawer-overlay.open{display:flex}
+  .drawer{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:28px;max-width:520px;width:100%}
+  .drawer h3{font-family:var(--font-head);margin:0 0 20px;font-size:20px}
+  .drawer .field{margin-bottom:14px}
+  .drawer .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .drawer .actions{display:flex;gap:10px;margin-top:20px}
+  .drawer .actions .btn-outline{flex:1}
+  .drawer .actions .btn{flex:1}
+  textarea{background:var(--ink-2);border:1px solid var(--line);color:var(--cream);padding:12px 14px;border-radius:var(--radius);font-size:14px;width:100%;resize:vertical;min-height:64px}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--gold);color:var(--cream);padding:14px 20px;border-radius:var(--radius);font-size:14px;z-index:200;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:320px}
+  html[dir="rtl"] .toast{right:auto;left:24px}
+  .toast.error{border-color:var(--danger)}
+  .toast.show{display:block;animation:toastin .2s ease}
+  @keyframes toastin{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .settings-form{max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+
+  .stats-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+  .stat-tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .stat-tile .label{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:8px}
+  .stat-tile .value{font-family:var(--font-head);font-size:26px;font-weight:600;color:var(--gold-bright)}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+  .stats-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .stats-card h4{margin:0 0 12px;font-family:var(--font-head);font-size:16px;font-weight:600}
+  .stats-card table{background:transparent;border:none}
+  .rank{color:var(--muted);font-weight:600}
+  .bar-cell{display:flex;align-items:center;gap:8px}
+  .bar-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;min-width:40px}
+  .bar-fill{height:100%;background:var(--gold);border-radius:3px}
+
+  @media (max-width: 900px){
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .2s}
+    html[dir="rtl"] .sidebar{left:auto;right:0;transform:translateX(100%)}
+    .sidebar.open{transform:translateX(0)}
+    .mobile-topbar{display:flex}
+    .content{padding:20px 16px}
+    .drawer .form-row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand"><span class="brand-mark">BH</span><span class="name">The Barber House</span></div>
+    <h1>Admin Login</h1>
+    <div class="login-error" id="loginError"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn" id="loginBtn" type="submit">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" id="sidebarBrand"><span class="brand-mark">BH</span><span class="name">The Barber House</span></div>
+    <button class="navitem active" data-panel="bookings"><span class="icon" data-icon="calendar-check" aria-hidden="true"></span> Bookings</button>
+    <button class="navitem" data-panel="barbers"><span class="icon" data-icon="users" aria-hidden="true"></span> Barbers</button>
+    <button class="navitem" data-panel="packages"><span class="icon" data-icon="package" aria-hidden="true"></span> Packages</button>
+    <button class="navitem" data-panel="reviews"><span class="icon" data-icon="star" aria-hidden="true"></span> Reviews</button>
+    <button class="navitem" data-panel="stats"><span class="icon" data-icon="bar-chart" aria-hidden="true"></span> Statistics</button>
+    <button class="navitem" data-panel="settings"><span class="icon" data-icon="settings" aria-hidden="true"></span> Shop Settings</button>
+    <div class="sidebar-bottom">
+      <button class="btn-outline" id="signOutBtn" style="width:100%">Sign Out</button>
+    </div>
+  </aside>
+
+  <div style="flex:1;min-width:0">
+    <div class="mobile-topbar">
+      <button class="hamburger" id="openSidebarBtn" aria-label="Open menu">☰</button>
+      <span style="font-family:var(--font-head);font-weight:600">The Barber House Admin</span>
+      <span style="width:22px"></span>
+    </div>
+
+    <div class="content">
+      <!-- BOOKINGS -->
+      <section class="panel active" id="panel-bookings">
+        <div class="topbar">
+          <h2>Bookings</h2>
+          <button class="btn-outline" id="addBookingBtn"><span class="icon" data-icon="plus" aria-hidden="true"></span> Add Booking</button>
+        </div>
+        <div class="toolbar">
+          <input type="date" id="filterDate">
+          <select id="filterStatus">
+            <option value="">All statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="no-show">No-show</option>
+          </select>
+          <button class="btn-outline" id="clearFiltersBtn">Clear filters</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Customer</th><th>Phone</th><th>Date</th><th>Time</th><th>Barber</th><th>Package</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="bookingsBody"><tr class="empty-row"><td colspan="8">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- BARBERS -->
+      <section class="panel" id="panel-barbers">
+        <div class="topbar">
+          <h2>Barbers</h2>
+          <button class="btn-outline" id="addBarberBtn"><span class="icon" data-icon="plus" aria-hidden="true"></span> Add Barber</button>
+        </div>
+        <div class="cards-grid" id="barbersAdminGrid"><p>Loading…</p></div>
+      </section>
+
+      <!-- PACKAGES -->
+      <section class="panel" id="panel-packages">
+        <div class="topbar">
+          <h2>Packages</h2>
+          <button class="btn-outline" id="addPackageBtn"><span class="icon" data-icon="plus" aria-hidden="true"></span> Add Package</button>
+        </div>
+        <div class="cards-grid" id="packagesAdminGrid"><p>Loading…</p></div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="panel" id="panel-reviews">
+        <div class="topbar">
+          <h2>Reviews</h2>
+        </div>
+        <div class="toolbar">
+          <select id="filterRating">
+            <option value="">All ratings</option>
+            <option value="5">5 stars</option>
+            <option value="4">4 stars</option>
+            <option value="3">3 stars</option>
+            <option value="2">2 stars</option>
+            <option value="1">1 star</option>
+          </select>
+          <input type="text" id="filterReviewSearch" placeholder="Search name or comment…">
+          <span class="spacer"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Name</th><th>Rating</th><th>Comment</th><th>Date</th><th></th>
+            </tr></thead>
+            <tbody id="reviewsBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STATISTICS -->
+      <section class="panel" id="panel-stats">
+        <div class="topbar">
+          <h2>Statistics</h2>
+        </div>
+        <div class="toolbar">
+          <select id="statsRange">
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 12 months</option>
+            <option value="all" selected>All time</option>
+          </select>
+          <span class="spacer"></span>
+        </div>
+
+        <div class="stats-cards" id="statsSummary"></div>
+
+        <div class="stats-grid">
+          <div class="stats-card">
+            <h4>Revenue (completed bookings)</h4>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Period</th><th>Bookings</th><th>Revenue (EGP)</th></tr></thead>
+                <tbody id="statsRevenueBody"><tr class="empty-row"><td colspan="3">No data yet.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="stats-card">
+            <h4>Top Barbers</h4>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>#</th><th>Barber</th><th>Bookings</th><th>Completed</th><th>Revenue (EGP)</th></tr></thead>
+                <tbody id="statsBarbersBody"><tr class="empty-row"><td colspan="5">No data yet.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="stats-card">
+            <h4>Top Packages</h4>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>#</th><th>Package</th><th>Times Booked</th><th>Revenue (EGP)</th></tr></thead>
+                <tbody id="statsPackagesBody"><tr class="empty-row"><td colspan="4">No data yet.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="stats-card">
+            <h4>Booking Source</h4>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Source</th><th>Bookings</th><th>Share</th></tr></thead>
+                <tbody id="statsSourceBody"><tr class="empty-row"><td colspan="3">No data yet.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="stats-card">
+            <h4>Bookings by Status</h4>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Status</th><th>Count</th><th>Share</th></tr></thead>
+                <tbody id="statsStatusBody"><tr class="empty-row"><td colspan="3">No data yet.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-card" style="margin-top:16px">
+          <h4>All Past Bookings</h4>
+          <div class="toolbar" style="margin-bottom:12px">
+            <input type="text" id="statsSearch" placeholder="Search customer, phone, barber…">
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Customer</th><th>Phone</th><th>Date</th><th>Time</th><th>Barber</th><th>Package</th><th>Price</th><th>Status</th>
+              </tr></thead>
+              <tbody id="statsAllBody"><tr class="empty-row"><td colspan="8">No data yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="panel" id="panel-settings">
+        <div class="topbar"><h2>Shop Settings</h2></div>
+        <form class="settings-form" id="settingsForm">
+          <div class="field"><label>Opening time</label><input type="time" id="setOpen"></div>
+          <div class="field"><label>Closing time</label><input type="time" id="setClose"></div>
+          <div class="field"><label>Slot interval (minutes)</label><input type="number" id="setInterval" min="5" step="5"></div>
+          <div class="field"><label>Phone</label><input type="text" id="setPhone"></div>
+          <div class="field"><label>Email</label><input type="email" id="setEmail"></div>
+          <div class="field"><label>Address</label><input type="text" id="setAddress"></div>
+          <div class="field"><label>Google Maps link</label><input type="text" id="setMaps"></div>
+          <div class="field"><label>Facebook URL</label><input type="text" id="setFb"></div>
+          <div class="field"><label>Instagram URL</label><input type="text" id="setIg"></div>
+          <button class="btn" type="submit">Save Settings</button>
+        </form>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Booking drawer -->
+<div class="drawer-overlay" id="bookingDrawerOverlay">
+  <div class="drawer">
+    <h3 id="bookingDrawerTitle">Add Booking</h3>
+    <form id="bookingDrawerForm">
+      <input type="hidden" id="bd_id">
+      <div class="field"><label>Customer Name</label><input id="bd_name" required></div>
+      <div class="field"><label>Phone Number</label><input id="bd_phone" placeholder="01012345678" required></div>
+      <div class="form-row">
+        <div class="field"><label>Package</label><select id="bd_package" required></select></div>
+        <div class="field"><label>Barber</label><select id="bd_barber" required></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Date</label><input type="date" id="bd_date" required></div>
+        <div class="field"><label>Time</label><input type="time" id="bd_time" required></div>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="bd_status">
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="no-show">No-show</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-outline" id="bd_cancel">Cancel</button>
+        <button type="submit" class="btn">Save Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Barber drawer -->
+<div class="drawer-overlay" id="barberDrawerOverlay">
+  <div class="drawer">
+    <h3 id="barberDrawerTitle">Add Barber</h3>
+    <form id="barberDrawerForm">
+      <input type="hidden" id="br_id">
+      <div class="field"><label>Name</label><input id="br_name" required></div>
+      <div class="field"><label>Photo URL (optional)</label><input id="br_photo" placeholder="https://…"></div>
+      <div class="field"><label>Specialties (comma separated)</label><input id="br_specialties" placeholder="Fades, Beard sculpting"></div>
+      <div class="field"><label>Bio (English)</label><textarea id="br_bio_en"></textarea></div>
+      <div class="field"><label>Bio (Arabic)</label><textarea id="br_bio_ar" dir="rtl"></textarea></div>
+      <div class="checkbox-row"><input type="checkbox" id="br_active" checked><label for="br_active">Active</label></div>
+      <div class="actions">
+        <button type="button" class="btn-outline" id="br_cancel">Cancel</button>
+        <button type="submit" class="btn">Save Barber</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Package drawer -->
+<div class="drawer-overlay" id="packageDrawerOverlay">
+  <div class="drawer">
+    <h3 id="packageDrawerTitle">Add Package</h3>
+    <form id="packageDrawerForm">
+      <input type="hidden" id="pk_id">
+      <div class="form-row">
+        <div class="field"><label>Name (English)</label><input id="pk_name_en" required></div>
+        <div class="field"><label>Name (Arabic)</label><input id="pk_name_ar" dir="rtl" required></div>
+      </div>
+      <div class="field"><label>Description (English)</label><textarea id="pk_desc_en"></textarea></div>
+      <div class="field"><label>Description (Arabic)</label><textarea id="pk_desc_ar" dir="rtl"></textarea></div>
+      <div class="form-row">
+        <div class="field"><label>Price (EGP)</label><input type="number" id="pk_price" min="0" required></div>
+        <div class="field"><label>Duration (minutes)</label><input type="number" id="pk_duration" min="5" step="5" required></div>
+      </div>
+      <div class="checkbox-row"><input type="checkbox" id="pk_active" checked><label for="pk_active">Active</label></div>
+      <div class="actions">
+        <button type="button" class="btn-outline" id="pk_cancel">Cancel</button>
+        <button type="submit" class="btn">Save Package</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm dialog (used for all destructive actions) -->
+<div class="drawer-overlay" id="confirmOverlay">
+  <div class="drawer" style="max-width:400px">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMessage" style="color:var(--cream-dim);font-size:14.5px;margin:0 0 4px"></p>
+    <div class="actions">
+      <button type="button" class="btn-outline" id="confirmCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-delete" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, onSnapshot,
+  query, where, serverTimestamp, setDoc
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyANRWKG30cxo6mvTMoFB1UQYC5xXrlI2Kk",
+  authDomain: "tbs-salon-c2416.firebaseapp.com",
+  projectId: "tbs-salon-c2416",
+  storageBucket: "tbs-salon-c2416.firebasestorage.app",
+  messagingSenderId: "857724563209",
+  appId: "1:857724563209:web:6ae02b15c52c35be7d2dd8",
+  measurementId: "G-FXGNY2NZM6",
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const DEFAULT_SHOP_SETTINGS = {
+  slotIntervalMinutes: 30, openTime: "10:00", closeTime: "22:00",
+  closedWeekdays: [], closedDates: [],
+  phone: "+20 11 18077259", address: "The Strip, Madinaty, Cairo, Egypt",
+  mapsUrl: "https://maps.app.goo.gl/1A1tNfoMT8HEYJFp7",
+  facebook: "https://www.facebook.com/p/The-Barber-House-61557901139008/",
+  instagram: "https://www.instagram.com/thebarberhouse24/",
+  email: "madinaty.barber.house@gmail.com",
+};
+function timeToMinutes(hhmm){ const [h,m]=hhmm.split(":").map(Number); return h*60+m; }
+function formatTime12(hhmm){
+  if (!hhmm) return '-';
+  const [h,m] = hhmm.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+}
+function overlaps(startMin, duration, existingStartMin, existingDuration){
+  const endMin = startMin+duration, existingEnd = existingStartMin+existingDuration;
+  return startMin < existingEnd && existingStartMin < endMin;
+}
+
+const ICONS = {
+  "calendar-check": '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  package: '<path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  pencil: '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+  "trash-2": '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+  "bar-chart": '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+};
+function renderIcons(root){
+  (root || document).querySelectorAll('[data-icon]').forEach(el=>{
+    const name = el.dataset.icon;
+    if (ICONS[name]){
+      el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+    }
+  });
+}
+renderIcons();
+
+// ---------- Auth ----------
+const loginScreen = document.getElementById("loginScreen");
+const appShell = document.getElementById("appShell");
+
+document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value;
+  const btn = document.getElementById("loginBtn");
+  const err = document.getElementById("loginError");
+  err.style.display = "none";
+  btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (ex) {
+    err.textContent = "Incorrect email or password. Please try again.";
+    err.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "Sign In";
+  }
+});
+
+document.getElementById("signOutBtn").addEventListener("click", ()=> signOut(auth));
+
+onAuthStateChanged(auth, (user)=>{
+  if (user){
+    loginScreen.style.display = "none";
+    appShell.classList.add("visible");
+    initDashboard();
+  } else {
+    loginScreen.style.display = "flex";
+    appShell.classList.remove("visible");
+  }
+});
+
+// ---------- Sidebar / nav ----------
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+document.getElementById("openSidebarBtn").addEventListener("click", ()=>{ sidebar.classList.add("open"); sidebarOverlay.classList.add("open"); });
+sidebarOverlay.addEventListener("click", ()=>{ sidebar.classList.remove("open"); sidebarOverlay.classList.remove("open"); });
+document.getElementById("sidebarBrand").addEventListener("click", ()=> switchPanel("bookings"));
+document.querySelectorAll(".navitem[data-panel]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{ switchPanel(btn.dataset.panel); sidebar.classList.remove("open"); sidebarOverlay.classList.remove("open"); });
+});
+function switchPanel(name){
+  document.querySelectorAll(".navitem[data-panel]").forEach(b=>b.classList.toggle("active", b.dataset.panel===name));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", p.id === "panel-"+name));
+}
+
+function showToast(msg, isError=false){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.toggle("error", isError);
+  toast.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> toast.classList.remove("show"), 3200);
+}
+
+// Styled confirm dialog used before every destructive action.
+function confirmDialog(message, title){
+  return new Promise((resolve)=>{
+    const overlay = document.getElementById("confirmOverlay");
+    document.getElementById("confirmTitle").textContent = title || "Are you sure?";
+    document.getElementById("confirmMessage").textContent = message;
+    const okBtn = document.getElementById("confirmOkBtn");
+    const cancelBtn = document.getElementById("confirmCancelBtn");
+    overlay.classList.add("open");
+    function cleanup(result){
+      overlay.classList.remove("open");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onOverlayClick);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+    function onOverlayClick(e){ if (e.target === overlay) cleanup(false); }
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onOverlayClick);
+  });
+}
+
+let dashboardInitialized = false;
+let bookings = [], barbers = [], packages = [], reviews = [];
+let firstBookingsLoad = true;
+let lastBookingIds = new Set();
+
+async function initDashboard(){
+  if (dashboardInitialized) return;
+  dashboardInitialized = true;
+
+  await ensureDefaultSettingsDoc();
+
+  onSnapshot(collection(db,"packages"), snap=>{
+    packages = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderPackagesAdmin();
+    populateBookingSelects();
+    renderStats();
+  });
+  onSnapshot(collection(db,"barbers"), snap=>{
+    barbers = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderBarbersAdmin();
+    populateBookingSelects();
+    renderStats();
+  });
+  onSnapshot(collection(db,"bookings"), snap=>{
+    bookings = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderBookings();
+    renderStats();
+  }, err=>{
+    document.getElementById("bookingsBody").innerHTML = `<tr class="empty-row"><td colspan="8">Couldn't load bookings.</td></tr>`;
+  });
+  onSnapshot(doc(db,"shopSettings","default"), snap=>{
+    if (snap.exists()) fillSettingsForm(snap.data());
+  });
+  onSnapshot(collection(db,"reviews"), snap=>{
+    reviews = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderReviewsAdmin();
+  }, err=>{
+    document.getElementById("reviewsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Couldn't load reviews.</td></tr>`;
+  });
+}
+
+async function ensureDefaultSettingsDoc(){
+  try {
+    const ref = doc(db,"shopSettings","default");
+    const snap = await getDoc(ref);
+    if (!snap.exists()){
+      await setDoc(ref, DEFAULT_SHOP_SETTINGS);
+    }
+  } catch(e){ console.warn("Could not verify shop settings doc", e); }
+}
+
+// ---------- Bookings ----------
+function renderBookings(){
+  const dateFilter = document.getElementById("filterDate").value;
+  const statusFilter = document.getElementById("filterStatus").value;
+  let rows = [...bookings];
+  if (dateFilter) rows = rows.filter(b=>b.date===dateFilter);
+  if (statusFilter) rows = rows.filter(b=>b.status===statusFilter);
+  rows.sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+
+  const tbody = document.getElementById("bookingsBody");
+  if (!rows.length){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">No bookings match these filters.</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(b=>{
+      const barber = barbers.find(x=>x.id===b.barberId);
+      const pkg = packages.find(p=>p.id===b.packageId);
+      const isNew = firstBookingsLoad ? false : !lastBookingIds.has(b.id);
+      return `<tr class="${isNew?'new-row':''}" data-id="${b.id}">
+        <td>${b.customerName||'-'}</td>
+        <td><a href="tel:${b.customerPhone}">${b.customerPhone||'-'}</a></td>
+        <td>${b.date}</td>
+        <td>${formatTime12(b.time)}</td>
+        <td>${barber?barber.name:'-'}</td>
+        <td>${pkg?(pkg.name?.en||''):'-'}</td>
+        <td><span class="badge ${b.status}">${b.status}</span></td>
+        <td><div class="row-actions">
+          ${b.status!=="completed" ? `<button class="icon-btn complete" data-complete="${b.id}" title="Mark as completed"><span class="icon" data-icon="check" aria-hidden="true"></span></button>` : ''}
+          <button class="icon-btn" data-edit="${b.id}" title="Edit"><span class="icon" data-icon="pencil" aria-hidden="true"></span></button>
+          <button class="icon-btn del" data-del="${b.id}" title="Delete"><span class="icon" data-icon="trash-2" aria-hidden="true"></span></button>
+        </div></td>
+      </tr>`;
+    }).join("");
+  }
+  lastBookingIds = new Set(bookings.map(b=>b.id));
+  firstBookingsLoad = false;
+  renderIcons(tbody);
+
+  tbody.querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", ()=>openBookingDrawer(btn.dataset.edit)));
+  tbody.querySelectorAll("[data-del]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const ok = await confirmDialog("This will permanently remove the booking record. This can't be undone.", "Delete this booking?");
+    if (!ok) return;
+    try { await deleteDoc(doc(db,"bookings",btn.dataset.del)); showToast("Booking deleted."); }
+    catch(e){ showToast("Couldn't delete booking.", true); }
+  }));
+  tbody.querySelectorAll("[data-complete]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    try { await updateDoc(doc(db,"bookings",btn.dataset.complete), { status: "completed" }); showToast("Booking marked as completed."); }
+    catch(e){ showToast("Couldn't update booking.", true); }
+  }));
+}
+document.getElementById("filterDate").addEventListener("change", renderBookings);
+document.getElementById("filterStatus").addEventListener("change", renderBookings);
+document.getElementById("clearFiltersBtn").addEventListener("click", ()=>{
+  document.getElementById("filterDate").value = "";
+  document.getElementById("filterStatus").value = "";
+  renderBookings();
+});
+
+function populateBookingSelects(){
+  const pkgSel = document.getElementById("bd_package");
+  const barberSel = document.getElementById("bd_barber");
+  const pv1 = pkgSel.value, pv2 = barberSel.value;
+  pkgSel.innerHTML = packages.map(p=>`<option value="${p.id}">${p.name?.en} (${p.price} EGP)</option>`).join("");
+  barberSel.innerHTML = barbers.map(b=>`<option value="${b.id}">${b.name}</option>`).join("");
+  if (pv1) pkgSel.value = pv1;
+  if (pv2) barberSel.value = pv2;
+}
+
+const bookingDrawerOverlay = document.getElementById("bookingDrawerOverlay");
+document.getElementById("addBookingBtn").addEventListener("click", ()=>openBookingDrawer(null));
+document.getElementById("bd_cancel").addEventListener("click", ()=>bookingDrawerOverlay.classList.remove("open"));
+
+function openBookingDrawer(id){
+  const b = id ? bookings.find(x=>x.id===id) : null;
+  document.getElementById("bookingDrawerTitle").textContent = b ? "Edit Booking" : "Add Booking";
+  document.getElementById("bd_id").value = id || "";
+  document.getElementById("bd_name").value = b?.customerName || "";
+  document.getElementById("bd_phone").value = b?.customerPhone || "";
+  populateBookingSelects();
+  document.getElementById("bd_package").value = b?.packageId || (packages[0]?.id || "");
+  document.getElementById("bd_barber").value = b?.barberId || (barbers[0]?.id || "");
+  document.getElementById("bd_date").value = b?.date || new Date().toISOString().slice(0,10);
+  document.getElementById("bd_time").value = b?.time || "10:00";
+  document.getElementById("bd_status").value = b?.status || "confirmed";
+  bookingDrawerOverlay.classList.add("open");
+}
+
+document.getElementById("bookingDrawerForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const id = document.getElementById("bd_id").value;
+  const packageId = document.getElementById("bd_package").value;
+  const pkg = packages.find(p=>p.id===packageId);
+  const barberId = document.getElementById("bd_barber").value;
+  const date = document.getElementById("bd_date").value;
+  const time = document.getElementById("bd_time").value;
+  const status = document.getElementById("bd_status").value;
+
+  if (status === "confirmed"){
+    const startMin = timeToMinutes(time);
+    const conflict = bookings.some(bk=>
+      bk.id !== id && bk.status === "confirmed" && bk.barberId === barberId && bk.date === date &&
+      overlaps(startMin, pkg.durationMinutes, timeToMinutes(bk.time), bk.estimatedDurationMinutes)
+    );
+    if (conflict){ showToast("This barber already has a booking that overlaps this time.", true); return; }
+  }
+
+  const payload = {
+    customerName: document.getElementById("bd_name").value.trim(),
+    customerPhone: document.getElementById("bd_phone").value.trim(),
+    packageId, barberId, date, time,
+    estimatedDurationMinutes: pkg?.durationMinutes || 30,
+    status,
+  };
+  try {
+    if (id){ await updateDoc(doc(db,"bookings",id), payload); showToast("Booking updated."); }
+    else { await addDoc(collection(db,"bookings"), { ...payload, source: "admin", createdAt: serverTimestamp() }); showToast("Booking added."); }
+    bookingDrawerOverlay.classList.remove("open");
+  } catch(e){ showToast("Couldn't save booking.", true); }
+});
+
+// ---------- Barbers ----------
+function renderBarbersAdmin(){
+  const grid = document.getElementById("barbersAdminGrid");
+  if (!barbers.length){ grid.innerHTML = "<p>No barbers yet. Use \"Add Barber\" to create one.</p>"; return; }
+  grid.innerHTML = barbers.map(b=>`
+    <div class="item-card">
+      <h4>${b.name}</h4>
+      <div class="sub">${(b.specialties||[]).join(" · ")}</div>
+      <div class="desc">${b.bio?.en || ''}</div>
+      <div class="row">
+        <span class="toggle-pill ${b.active!==false?'active':'inactive'}">${b.active!==false?'Active':'Inactive'}</span>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="${b.id}"><span class="icon" data-icon="pencil" aria-hidden="true"></span></button>
+          <button class="icon-btn del" data-del="${b.id}"><span class="icon" data-icon="trash-2" aria-hidden="true"></span></button>
+        </div>
+      </div>
+    </div>`).join("");
+  renderIcons(grid);
+  grid.querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", ()=>openBarberDrawer(btn.dataset.edit)));
+  grid.querySelectorAll("[data-del]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const ok = await confirmDialog("Consider deactivating instead if this barber has past bookings. This can't be undone.", "Delete this barber?");
+    if (!ok) return;
+    try { await deleteDoc(doc(db,"barbers",btn.dataset.del)); showToast("Barber deleted."); }
+    catch(e){ showToast("Couldn't delete barber.", true); }
+  }));
+}
+const barberDrawerOverlay = document.getElementById("barberDrawerOverlay");
+document.getElementById("addBarberBtn").addEventListener("click", ()=>openBarberDrawer(null));
+document.getElementById("br_cancel").addEventListener("click", ()=>barberDrawerOverlay.classList.remove("open"));
+function openBarberDrawer(id){
+  const b = id ? barbers.find(x=>x.id===id) : null;
+  document.getElementById("barberDrawerTitle").textContent = b ? "Edit Barber" : "Add Barber";
+  document.getElementById("br_id").value = id || "";
+  document.getElementById("br_name").value = b?.name || "";
+  document.getElementById("br_photo").value = b?.photoUrl || "";
+  document.getElementById("br_specialties").value = (b?.specialties||[]).join(", ");
+  document.getElementById("br_bio_en").value = b?.bio?.en || "";
+  document.getElementById("br_bio_ar").value = b?.bio?.ar || "";
+  document.getElementById("br_active").checked = b ? b.active !== false : true;
+  barberDrawerOverlay.classList.add("open");
+}
+document.getElementById("barberDrawerForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const id = document.getElementById("br_id").value;
+  const payload = {
+    name: document.getElementById("br_name").value.trim(),
+    photoUrl: document.getElementById("br_photo").value.trim(),
+    specialties: document.getElementById("br_specialties").value.split(",").map(s=>s.trim()).filter(Boolean),
+    bio: { en: document.getElementById("br_bio_en").value.trim(), ar: document.getElementById("br_bio_ar").value.trim() },
+    active: document.getElementById("br_active").checked,
+  };
+  try {
+    if (id){ await updateDoc(doc(db,"barbers",id), payload); showToast("Barber updated."); }
+    else { await addDoc(collection(db,"barbers"), payload); showToast("Barber added."); }
+    barberDrawerOverlay.classList.remove("open");
+  } catch(e){ showToast("Couldn't save barber.", true); }
+});
+
+// ---------- Packages ----------
+function renderPackagesAdmin(){
+  const grid = document.getElementById("packagesAdminGrid");
+  if (!packages.length){ grid.innerHTML = "<p>No packages yet. Use \"Add Package\" to create one.</p>"; return; }
+  grid.innerHTML = packages.map(p=>`
+    <div class="item-card">
+      <h4>${p.name?.en} <span style="color:var(--gold-bright);font-weight:400">(${p.price} EGP)</span></h4>
+      <div class="sub">${p.durationMinutes} min</div>
+      <div class="desc">${p.description?.en || ''}</div>
+      <div class="row">
+        <span class="toggle-pill ${p.active!==false?'active':'inactive'}">${p.active!==false?'Active':'Inactive'}</span>
+        <div class="row-actions">
+          <button class="icon-btn" data-edit="${p.id}"><span class="icon" data-icon="pencil" aria-hidden="true"></span></button>
+          <button class="icon-btn del" data-del="${p.id}"><span class="icon" data-icon="trash-2" aria-hidden="true"></span></button>
+        </div>
+      </div>
+    </div>`).join("");
+  renderIcons(grid);
+  grid.querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click", ()=>openPackageDrawer(btn.dataset.edit)));
+  grid.querySelectorAll("[data-del]").forEach(btn=>btn.addEventListener("click", async ()=>{
+    const ok = await confirmDialog("Consider deactivating instead if this package is used in past bookings. This can't be undone.", "Delete this package?");
+    if (!ok) return;
+    try { await deleteDoc(doc(db,"packages",btn.dataset.del)); showToast("Package deleted."); }
+    catch(e){ showToast("Couldn't delete package.", true); }
+  }));
+}
+const packageDrawerOverlay = document.getElementById("packageDrawerOverlay");
+document.getElementById("addPackageBtn").addEventListener("click", ()=>openPackageDrawer(null));
+document.getElementById("pk_cancel").addEventListener("click", ()=>packageDrawerOverlay.classList.remove("open"));
+function openPackageDrawer(id){
+  const p = id ? packages.find(x=>x.id===id) : null;
+  document.getElementById("packageDrawerTitle").textContent = p ? "Edit Package" : "Add Package";
+  document.getElementById("pk_id").value = id || "";
+  document.getElementById("pk_name_en").value = p?.name?.en || "";
+  document.getElementById("pk_name_ar").value = p?.name?.ar || "";
+  document.getElementById("pk_desc_en").value = p?.description?.en || "";
+  document.getElementById("pk_desc_ar").value = p?.description?.ar || "";
+  document.getElementById("pk_price").value = p?.price ?? "";
+  document.getElementById("pk_duration").value = p?.durationMinutes ?? "";
+  document.getElementById("pk_active").checked = p ? p.active !== false : true;
+  packageDrawerOverlay.classList.add("open");
+}
+document.getElementById("packageDrawerForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const id = document.getElementById("pk_id").value;
+  const payload = {
+    name: { en: document.getElementById("pk_name_en").value.trim(), ar: document.getElementById("pk_name_ar").value.trim() },
+    description: { en: document.getElementById("pk_desc_en").value.trim(), ar: document.getElementById("pk_desc_ar").value.trim() },
+    price: Number(document.getElementById("pk_price").value),
+    durationMinutes: Number(document.getElementById("pk_duration").value),
+    active: document.getElementById("pk_active").checked,
+  };
+  try {
+    if (id){ await updateDoc(doc(db,"packages",id), payload); showToast("Package updated."); }
+    else { await addDoc(collection(db,"packages"), payload); showToast("Package added."); }
+    packageDrawerOverlay.classList.remove("open");
+  } catch(e){ showToast("Couldn't save package.", true); }
+});
+
+// ---------- Reviews ----------
+function reviewDateLabel(r){
+  const ts = r.createdAt;
+  if (ts && typeof ts.toDate === "function"){
+    return ts.toDate().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+  }
+  return "-";
+}
+function reviewStarsLabel(rating){
+  const r = Math.max(0, Math.min(5, Number(rating) || 0));
+  return "★".repeat(r) + "☆".repeat(5 - r);
+}
+function renderReviewsAdmin(){
+  const ratingFilter = document.getElementById("filterRating").value;
+  const search = (document.getElementById("filterReviewSearch").value || "").trim().toLowerCase();
+  let rows = [...reviews].sort((a,b)=>{
+    const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+    const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+    return bt - at;
+  });
+  if (ratingFilter) rows = rows.filter(r => Number(r.rating) === Number(ratingFilter));
+  if (search) rows = rows.filter(r => [r.name, r.comment].filter(Boolean).some(v => String(v).toLowerCase().includes(search)));
+
+  const body = document.getElementById("reviewsBody");
+  if (!rows.length){
+    body.innerHTML = `<tr class="empty-row"><td colspan="5">No reviews found.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.name) || '-'}</td>
+      <td><span style="color:var(--gold-bright)">${reviewStarsLabel(r.rating)}</span></td>
+      <td style="max-width:360px;white-space:normal">${escapeHtml(r.comment) || '-'}</td>
+      <td>${reviewDateLabel(r)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn del" data-del-review="${r.id}"><span class="icon" data-icon="trash-2" aria-hidden="true"></span></button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+  renderIcons(body);
+  body.querySelectorAll("[data-del-review]").forEach(btn => btn.addEventListener("click", async ()=>{
+    const ok = await confirmDialog("This review will be permanently removed from the website.", "Delete this review?");
+    if (!ok) return;
+    try { await deleteDoc(doc(db,"reviews",btn.dataset.delReview)); showToast("Review deleted."); }
+    catch(e){ showToast("Couldn't delete review.", true); }
+  }));
+}
+document.getElementById("filterRating").addEventListener("change", renderReviewsAdmin);
+document.getElementById("filterReviewSearch").addEventListener("input", renderReviewsAdmin);
+
+// ---------- Statistics ----------
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function statsCutoffDate(){
+  const rangeVal = document.getElementById("statsRange").value;
+  if (rangeVal === "all") return null;
+  const days = Number(rangeVal);
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0,10);
+}
+function renderStats(){
+  const statsBody = document.getElementById("statsSummary");
+  if (!statsBody) return; // panel not in DOM yet
+
+  const cutoff = statsCutoffDate();
+  let rows = [...bookings];
+  if (cutoff) rows = rows.filter(b=>b.date >= cutoff);
+
+  const completed = rows.filter(b=>b.status === "completed");
+  const cancelled = rows.filter(b=>b.status === "cancelled");
+  const noShow = rows.filter(b=>b.status === "no-show");
+  const priceOf = b => packages.find(p=>p.id===b.packageId)?.price || 0;
+  const totalRevenue = completed.reduce((sum,b)=> sum + priceOf(b), 0);
+  const avgTicket = completed.length ? Math.round(totalRevenue / completed.length) : 0;
+
+  // ---- Summary tiles ----
+  statsBody.innerHTML = `
+    <div class="stat-tile"><div class="label">Total Bookings</div><div class="value">${rows.length}</div></div>
+    <div class="stat-tile"><div class="label">Completed</div><div class="value">${completed.length}</div></div>
+    <div class="stat-tile"><div class="label">Cancelled</div><div class="value">${cancelled.length}</div></div>
+    <div class="stat-tile"><div class="label">No-shows</div><div class="value">${noShow.length}</div></div>
+    <div class="stat-tile"><div class="label">Revenue (EGP)</div><div class="value">${totalRevenue.toLocaleString()}</div></div>
+    <div class="stat-tile"><div class="label">Avg Ticket (EGP)</div><div class="value">${avgTicket.toLocaleString()}</div></div>
+    <div class="stat-tile"><div class="label">Active Barbers</div><div class="value">${barbers.filter(b=>b.active!==false).length}</div></div>
+    <div class="stat-tile"><div class="label">Active Packages</div><div class="value">${packages.filter(p=>p.active!==false).length}</div></div>
+    <div class="stat-tile"><div class="label">Via Website</div><div class="value">${rows.filter(b=>b.source==="website").length}</div></div>
+    <div class="stat-tile"><div class="label">Added by Admin</div><div class="value">${rows.filter(b=>b.source==="admin").length}</div></div>
+  `;
+
+  // ---- Revenue by month ----
+  const byMonth = {};
+  completed.forEach(b=>{
+    const key = (b.date||"").slice(0,7) || "Unknown";
+    if (!byMonth[key]) byMonth[key] = { count:0, revenue:0 };
+    byMonth[key].count++;
+    byMonth[key].revenue += priceOf(b);
+  });
+  const monthKeys = Object.keys(byMonth).sort().reverse();
+  const revBody = document.getElementById("statsRevenueBody");
+  revBody.innerHTML = monthKeys.length ? monthKeys.map(k=>`
+    <tr><td>${k}</td><td>${byMonth[k].count}</td><td>${byMonth[k].revenue.toLocaleString()}</td></tr>
+  `).join("") : `<tr class="empty-row"><td colspan="3">No completed bookings in this range.</td></tr>`;
+
+  // ---- Top barbers ----
+  const barberStats = {};
+  rows.forEach(b=>{
+    const id = b.barberId || "unknown";
+    if (!barberStats[id]) barberStats[id] = { count:0, completed:0, revenue:0 };
+    barberStats[id].count++;
+    if (b.status === "completed"){ barberStats[id].completed++; barberStats[id].revenue += priceOf(b); }
+  });
+  const barberRanked = Object.entries(barberStats)
+    .map(([id, s])=>({ id, name: barbers.find(x=>x.id===id)?.name || "Unknown", ...s }))
+    .sort((a,b)=> b.revenue - a.revenue || b.count - a.count);
+  const maxBarberRevenue = Math.max(1, ...barberRanked.map(x=>x.revenue));
+  const barbersBody = document.getElementById("statsBarbersBody");
+  barbersBody.innerHTML = barberRanked.length ? barberRanked.map((x,i)=>`
+    <tr>
+      <td class="rank">#${i+1}</td>
+      <td>${escapeHtml(x.name)}</td>
+      <td>${x.count}</td>
+      <td>${x.completed}</td>
+      <td><div class="bar-cell"><span>${x.revenue.toLocaleString()}</span><div class="bar-track"><div class="bar-fill" style="width:${(x.revenue/maxBarberRevenue*100).toFixed(0)}%"></div></div></div></td>
+    </tr>
+  `).join("") : `<tr class="empty-row"><td colspan="5">No bookings in this range.</td></tr>`;
+
+  // ---- Top packages ----
+  const pkgStats = {};
+  rows.forEach(b=>{
+    const id = b.packageId || "unknown";
+    if (!pkgStats[id]) pkgStats[id] = { count:0, revenue:0 };
+    pkgStats[id].count++;
+    if (b.status === "completed") pkgStats[id].revenue += priceOf(b);
+  });
+  const pkgRanked = Object.entries(pkgStats)
+    .map(([id, s])=>({ id, name: packages.find(p=>p.id===id)?.name?.en || "Unknown", ...s }))
+    .sort((a,b)=> b.count - a.count);
+  const maxPkgCount = Math.max(1, ...pkgRanked.map(x=>x.count));
+  const pkgsBody = document.getElementById("statsPackagesBody");
+  pkgsBody.innerHTML = pkgRanked.length ? pkgRanked.map((x,i)=>`
+    <tr>
+      <td class="rank">#${i+1}</td>
+      <td>${escapeHtml(x.name)}</td>
+      <td><div class="bar-cell"><span>${x.count}</span><div class="bar-track"><div class="bar-fill" style="width:${(x.count/maxPkgCount*100).toFixed(0)}%"></div></div></div></td>
+      <td>${x.revenue.toLocaleString()}</td>
+    </tr>
+  `).join("") : `<tr class="empty-row"><td colspan="4">No bookings in this range.</td></tr>`;
+
+  // ---- By source (website vs manually added by admin) ----
+  const sourceCounts = { website: 0, admin: 0, unknown: 0 };
+  rows.forEach(b=>{
+    if (b.source === "website") sourceCounts.website++;
+    else if (b.source === "admin") sourceCounts.admin++;
+    else sourceCounts.unknown++;
+  });
+  const sourceLabels = { website: "Website (customer)", admin: "Admin (manual)", unknown: "Unknown (legacy)" };
+  const sourceBody = document.getElementById("statsSourceBody");
+  const sourceEntries = Object.entries(sourceCounts).filter(([,c])=>c>0);
+  sourceBody.innerHTML = sourceEntries.length ? sourceEntries.map(([key,count])=>`
+    <tr><td>${sourceLabels[key]}</td><td>${count}</td><td>${rows.length?((count/rows.length*100).toFixed(0)):0}%</td></tr>
+  `).join("") : `<tr class="empty-row"><td colspan="3">No bookings in this range.</td></tr>`;
+
+  // ---- By status ----
+  const statusCounts = {};
+  rows.forEach(b=>{ statusCounts[b.status] = (statusCounts[b.status]||0) + 1; });
+  const statusBody = document.getElementById("statsStatusBody");
+  const statusEntries = Object.entries(statusCounts).sort((a,b)=>b[1]-a[1]);
+  statusBody.innerHTML = statusEntries.length ? statusEntries.map(([status,count])=>`
+    <tr><td><span class="badge ${status}">${status}</span></td><td>${count}</td><td>${rows.length?((count/rows.length*100).toFixed(0)):0}%</td></tr>
+  `).join("") : `<tr class="empty-row"><td colspan="3">No bookings in this range.</td></tr>`;
+
+  // ---- All past bookings (searchable, most recent first) ----
+  const search = (document.getElementById("statsSearch").value || "").trim().toLowerCase();
+  let allRows = [...rows].sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+  if (search){
+    allRows = allRows.filter(b=>{
+      const barber = barbers.find(x=>x.id===b.barberId);
+      return [b.customerName, b.customerPhone, barber?.name].filter(Boolean).some(v=>String(v).toLowerCase().includes(search));
+    });
+  }
+  const allBody = document.getElementById("statsAllBody");
+  allBody.innerHTML = allRows.length ? allRows.map(b=>{
+    const barber = barbers.find(x=>x.id===b.barberId);
+    const pkg = packages.find(p=>p.id===b.packageId);
+    return `<tr>
+      <td>${escapeHtml(b.customerName)||'-'}</td>
+      <td>${escapeHtml(b.customerPhone)||'-'}</td>
+      <td>${b.date||'-'}</td>
+      <td>${b.time?formatTime12(b.time):'-'}</td>
+      <td>${barber?escapeHtml(barber.name):'-'}</td>
+      <td>${pkg?escapeHtml(pkg.name?.en):'-'}</td>
+      <td>${pkg?pkg.price.toLocaleString()+' EGP':'-'}</td>
+      <td><span class="badge ${b.status}">${b.status}</span></td>
+    </tr>`;
+  }).join("") : `<tr class="empty-row"><td colspan="8">No bookings match.</td></tr>`;
+}
+document.getElementById("statsRange").addEventListener("change", renderStats);
+document.getElementById("statsSearch").addEventListener("input", renderStats);
+
+// ---------- Settings ----------
+function fillSettingsForm(s){
+  document.getElementById("setOpen").value = s.openTime || "10:00";
+  document.getElementById("setClose").value = s.closeTime || "22:00";
+  document.getElementById("setInterval").value = s.slotIntervalMinutes || 30;
+  document.getElementById("setPhone").value = s.phone || "";
+  document.getElementById("setEmail").value = s.email || "";
+  document.getElementById("setAddress").value = s.address || "";
+  document.getElementById("setMaps").value = s.mapsUrl || "";
+  document.getElementById("setFb").value = s.facebook || "";
+  document.getElementById("setIg").value = s.instagram || "";
+}
+document.getElementById("settingsForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const payload = {
+    openTime: document.getElementById("setOpen").value,
+    closeTime: document.getElementById("setClose").value,
+    slotIntervalMinutes: Number(document.getElementById("setInterval").value) || 30,
+    phone: document.getElementById("setPhone").value.trim(),
+    email: document.getElementById("setEmail").value.trim(),
+    address: document.getElementById("setAddress").value.trim(),
+    mapsUrl: document.getElementById("setMaps").value.trim(),
+    facebook: document.getElementById("setFb").value.trim(),
+    instagram: document.getElementById("setIg").value.trim(),
+  };
+  try { await updateDoc(doc(db,"shopSettings","default"), payload); showToast("Settings saved."); }
+  catch(e){ showToast("Couldn't save settings.", true); }
+});
+</script>
+</body>
+</html>
